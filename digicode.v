@@ -26,14 +26,20 @@
 `define P     4'b 1101
 
 module digicode(
-    input clk,
-    input timeout,
-    input daytime,
-    input [3:0] code,
-    input reset,
-    output reg door,
-    output reg alarm
+    clk,
+    timeout,
+    daytime,
+    code,
+    reset,
+    door,
+    alarm
     );
+   input clk,reset,timeout,daytime;
+   input [3:0] code;
+   output door,alarm;
+   wire clk,reset,timeout,daytime;
+   wire [3:0] code;
+   reg door,alarm;
 	 reg [6:0] current_state;
 	 reg [6:0] next_state;
 	 
@@ -49,6 +55,7 @@ module digicode(
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
 				else if (code==`ZERO || code==`ONE || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0)) next_state = `WRONG;
+				else next_state= `IDLE;
 			end
 			`PASS1:
 			begin
@@ -56,6 +63,7 @@ module digicode(
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
 				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`NINE || code==`A || code==`B || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else next_state= `IDLE;
 			end
 			`PASS2:
 			begin
@@ -63,6 +71,7 @@ module digicode(
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
 				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else next_state= `IDLE;
 			end
 			`PASS3:
 			begin
@@ -70,12 +79,18 @@ module digicode(
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
 				else if (code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else next_state= `IDLE;
 			end
 			`PASS4:
 			begin
 				if (code==`FOUR || (code==`P && daytime==1)) next_state=`RIGHT;
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else next_state= `IDLE;
+			end
+			default:
+			begin
+				next_state=`IDLE;
 			end
 		endcase
 		
@@ -108,6 +123,10 @@ module digicode(
 			`RIGHT: 
 			begin 
 				alarm<=0; door<=1;
+			end
+			default:
+			begin
+				alarm<=0; door<=0;
 			end
 		endcase
 endmodule
