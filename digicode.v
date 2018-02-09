@@ -1,13 +1,13 @@
 `timescale 1ns / 1ps
 
 //state assignment
-`define IDLE  7'b 0000001
-`define PASS1 7'b 0000010
-`define PASS2 7'b 0000100
-`define PASS3 7'b 0001000
-`define PASS4 7'b 0010000
-`define WRONG 7'b 0100000
-`define RIGHT 7'b 1000000
+`define IDLE  3'b 000
+`define PASS1 3'b 001
+`define RIGHT 3'b 011
+`define WRONG 3'b 010
+`define PASS2 3'b 110
+`define PASS3 3'b 111
+`define PASS4 3'b 101
 
 //code circuit
 `define ZERO  4'b 0000
@@ -40,8 +40,8 @@ module digicode(
    wire clk,reset,timeout,daytime;
    wire [3:0] code;
    reg door,alarm;
-	 reg [6:0] current_state;
-	 reg [6:0] next_state;
+	 reg [2:0] current_state;
+	 reg [2:0] next_state;
 	 
 	 always @(posedge clk)
 		if (reset==1) current_state = `IDLE ;
@@ -51,7 +51,7 @@ module digicode(
 		case (current_state)
 			`IDLE:
 			begin
-				if (code==`TWO) next_state= `PASS1;
+				if(code==`TWO) next_state= `PASS1;
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
 				else if (code==`ZERO || code==`ONE || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0)) next_state = `WRONG;
@@ -59,33 +59,51 @@ module digicode(
 			end
 			`PASS1:
 			begin
-				if (code==`EIGHT) next_state=`PASS2;
+				if (timeout==1) next_state = `WRONG;
+				else if (code==`TWO) next_state=`PASS1;
+				else if (code==`EIGHT) next_state=`PASS2;
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
-				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`NINE || code==`A || code==`B || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`NINE || code==`A || code==`B || (code==`P && daytime==0)) next_state = `WRONG;
 				else next_state= `IDLE;
 			end
 			`PASS2:
 			begin
-				if (code==`B) next_state=`PASS3;
+				if (timeout==1) next_state = `WRONG;
+				else if (code==`EIGHT) next_state=`PASS2;
+				else if(code==`B) next_state=`PASS3;
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
-				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || (code==`P && daytime==0)) next_state = `WRONG;
 				else next_state= `IDLE;
 			end
 			`PASS3:
 			begin
-				if (code==`ZERO) next_state=`PASS4;
+				if (timeout==1) next_state = `WRONG;
+				else if (code==`B) next_state=`PASS3;
+				else if (code==`ZERO) next_state=`PASS4;
 				else if (code==`C) next_state= `IDLE;
 				else if (code==`P && daytime==1) next_state= `RIGHT;
-				else if (code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else if (code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0)) next_state = `WRONG;
 				else next_state= `IDLE;
 			end
 			`PASS4:
 			begin
-				if (code==`FOUR || (code==`P && daytime==1)) next_state=`RIGHT;
+				if (timeout==1) next_state = `WRONG;
+				else if (code==`ZERO) next_state=`PASS4;
+				else if (code==`FOUR || (code==`P && daytime==1)) next_state=`RIGHT;
 				else if (code==`C) next_state= `IDLE;
-				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0) || timeout==1) next_state = `WRONG;
+				else if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0)) next_state = `WRONG;
+				else next_state= `IDLE;
+			end
+			`RIGHT:
+			begin
+				if ((code==`FOUR)||((code==`P)&&daytime==1)) next_state= `RIGHT;
+				else next_state= `IDLE;
+			end
+			`WRONG:
+			begin
+				if (code==`ZERO || code==`ONE || code==`TWO || code==`THREE || code==`FOUR || code==`FIVE || code==`SIX || code==`SEVEN || code==`EIGHT || code==`NINE || code==`A || code==`B || (code==`P && daytime==0)) next_state = `WRONG;
 				else next_state= `IDLE;
 			end
 			default:
